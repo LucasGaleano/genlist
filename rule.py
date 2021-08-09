@@ -1,18 +1,19 @@
 
 from dataclasses import dataclass
-from typing import List
+from itertools import combinations, chain
 
 @dataclass
 class Rule:
 
     name: str
     level: int
-    rule: str
+    rule: str #rule function
     description: str = ''
     prefilter: bool = False
     postfilter: bool = False
 
-
+def all_subset(iterable):
+    return chain.from_iterable(combinations(iterable, r) for r in range(len(iterable)+1))
 
 @dataclass
 class Rules(list):
@@ -20,6 +21,20 @@ class Rules(list):
     def show_rules(self):
         for rule in self:
             print(rule.name, '-', rule.description, '-', rule.level)
+
+    def prefilters(self):
+        return [rule for rule in self if rule.prefilter]
+
+    def apply_prefilters(self, word):
+        words = set()
+        for subsetPrefilters in all_subset(self.prefilters()):
+            print(subsetPrefilters)
+            prefilterWord = word
+            for prefilter in subsetPrefilters:
+                prefilterWord = prefilter.rule(prefilterWord)
+            words.add(prefilterWord)
+        return words
+        
 
 
 
@@ -63,17 +78,21 @@ rules.append(Rule('append_special_char', 1, append_special_char, 'Append special
 ##### PreFilter #####
 
 def capitalize_word(word):
-    yield word.capitalize()
+    return word.capitalize()
 
 rules.append(Rule('capitalize_word', 1, capitalize_word, 'Capitalize word', prefilter=True))
 
+def uppercase_word(word):
+    return word.upper()
 
-
+rules.append(Rule('uppercase_word', 1, uppercase_word, 'Uppercase word', prefilter=True))
 
 
 ##### PostFilter #####
 
 def between_parenthesis(word):
-    yield '(' + word + ')'
+    return '(' + word + ')'
 
-rules.append(Rule('between_parenthesis', 1, between_parenthesis, 'Puts word between parenthesis', prefilter=True))
+rules.append(Rule('between_parenthesis', 1, between_parenthesis, 'Puts word between parenthesis', postfilter=True))
+
+

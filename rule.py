@@ -22,6 +22,9 @@ def all_subset(iterable):
     subsets =  list(chain.from_iterable(combinations(iterable, r) for r in range(len(iterable)+1)))
     return set(list(subsets) + [tuple(reversed(i)) for i in subsets])
 
+def all_subset_no_repetable(iterable):
+    return  list(chain.from_iterable(combinations(iterable, r) for r in range(1,len(iterable)+1)))
+
 
 
 @dataclass
@@ -114,6 +117,23 @@ def uppercase_word(word):
     yield word.upper()
 
 rules.append(Rule('uppercase_word', 1, uppercase_word, 'Uppercase word', prefilter=True ))
+
+def leet(word):
+    map_leet = {'a':'4','e':'3','i':'1','o':'0', 's':'$','l':'1'}
+
+    leet = []
+    for i, letter in enumerate(word):
+        if letter in list(map_leet.keys()):
+            leet.append(i)
+
+
+    for comb in all_subset_no_repetable(leet):
+        aux = list(word)
+        for i in comb:
+            aux[i] = map_leet[aux[i]]
+        yield ''.join(aux)
+
+rules.append(Rule('leet', 1, leet, 'Leet word', prefilter=True ))
 
 
 ##### PostFilter #####

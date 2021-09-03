@@ -30,33 +30,60 @@ def all_subset_no_repetable(iterable):
 @dataclass
 class Rules(list):
 
-    def show_rules(self, maxLevel):
-        print('Rules')
+    maxLevel: int = 5
+
+    def show_rules(self, maxLevel=None):
+        print('Rules:')
+        if maxLevel is None:
+            maxLevel = self.maxLevel
         for rule in self:
             if not rule.prefilter and not rule.postfilter and rule.level_lower_than(maxLevel):
-                print(rule.name, '-', rule.description, '-', rule.level)
+                print(rule.name, '-', rule.description, '- level: ', rule.level)
         print()
 
         
-        print('Prefilters')
+        print('Prefilters:')
         for rule in self:
             if rule.prefilter and rule.level_lower_than(maxLevel):
                 print(rule.name, '-', rule.description, '-', rule.level)
         print()
 
-        print('PostFilters')
+        print('PostFilters:')
         for rule in self:
             if rule.postfilter and rule.level_lower_than(maxLevel):
                 print(rule.name, '-', rule.description, '-', rule.level)
         print()
 
-    def prefilters(self, maxLevel):
-        return [rule for rule in self if rule.prefilter if rule.level_lower_than(maxLevel)]
+    def rules(self, maxLevel=None):
+        if maxLevel is None:
+            maxLevel = self.maxLevel
+        return [rule for rule in self if not rule.prefilter and not rule.postfilter and rule.level_lower_than(maxLevel)]
+
+    def apply_rules(self, word, maxLevel=None):
+        if maxLevel is None:
+            maxLevel = self.maxLevel
+        for rule in self.rules(maxLevel):
+            if rule.level_lower_than(maxLevel):   
+                for output in rule.rule(word):
+                    yield output
+
+
+    def prefilters(self, maxLevel=None):
+        if maxLevel is None:
+            maxLevel = self.maxLevel
+        return [rule for rule in self if rule.prefilter and rule.level_lower_than(maxLevel)]
+
+    def postfilter(self, maxLevel=None):
+        if maxLevel is None:
+            maxLevel = self.maxLevel
+        return [rule for rule in self if rule.postfilter and rule.level_lower_than(maxLevel)]
         
-    def apply_prefilters(self, word):
+    def apply_prefilters(self, word, maxLevel=None):
         result = set()
         aux = []
-        for subsetPrefilters in all_subset(self.prefilters(5)):
+        if maxLevel is None:
+            maxLevel = self.maxLevel
+        for subsetPrefilters in all_subset(self.prefilters(maxLevel)):
             prefilterWords = set([word])
             result.update(aux)
             aux = []
@@ -94,7 +121,7 @@ def append_date(word):
     for date in range(1900,2050):
         yield word+str(date)
 
-rules.append(Rule('append_date', 1, append_date, 'Append dates numbers at the end'))
+rules.append(Rule('append_date', 2, append_date, 'Append dates numbers at the end'))
 
 
 def append_special_char(word): 
@@ -133,7 +160,7 @@ def leet(word):
             aux[i] = map_leet[aux[i]]
         yield ''.join(aux)
 
-rules.append(Rule('leet', 1, leet, 'Leet word', prefilter=True ))
+rules.append(Rule('leet', 3, leet, 'Leet word', prefilter=True ))
 
 
 ##### PostFilter #####
